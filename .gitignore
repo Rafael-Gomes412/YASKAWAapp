@@ -1,0 +1,29 @@
+# ======================
+# Environnement
+# ======================
+.env
+.env.*
+venv/
+__pycache__/
+*.py[cod]
+# ======================
+# Django
+# ======================
+*.log
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
+# ======================
+# IDE / OS
+# ======================
+.vscode/
+.idea/
+*.swp
+.DS_Store
+# ======================
+# Tests / Coverage
+# ======================
+htmlcov/
+.coverage
+.pytest_cache/
