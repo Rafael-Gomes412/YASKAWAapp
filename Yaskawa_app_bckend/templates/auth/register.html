@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inscription | YASKAWA{% endblock %}
+
+{% block content %}
+<div class="login-card">
+    <img src="{% static 'image/yaskawa-logo.png' %}" class="card-logo" alt="Yaskawa">
+    
+    {% if error %}
+        <p style="color: #d32f2f; font-size: 13px; font-weight: bold;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Mail</label>
+            <input type="email" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label>Name and Family name</label>
+            <input type="text" name="full_name" required>
+        </div>
+
+        <div class="form-group">
+            <label>Service</label>
+            <input type="text" name="service" required>
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" required>
+        </div>
+
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Subscribe</button>
+    </form>
+
+    <a href="{% url 'login' %}" class="footer-link">Already part of the team ? Please log in</a>
+</div>
+{% endblock %}

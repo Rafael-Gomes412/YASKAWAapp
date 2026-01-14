@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="login-card">
+    <img src="{% static 'image/yaskawa-logo.png' %}" class="card-logo" alt="Yaskawa">
+    {% if error %}
+        <div class="error-msg" style="color: red; font-size: 12px; margin-bottom: 10px;">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Mail</label>
+            <input type="text" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Connect</button>
+    </form>
+
+    <a href="{% url 'register' %}" class="footer-link">New Team Member ? Please Subscribe</a>
+</div>
+{% endblock %}
