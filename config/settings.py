@@ -17,13 +17,14 @@ load_dotenv(BASE_DIR / '.env')
 # ======================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-very-dangerous')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# CORRECTION : Ajout de localhost par défaut pour éviter les erreurs de requêtes
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+# Autorise toutes les connexions pour le développement Docker/VM
+ALLOWED_HOSTS = ['*']
+
 
 # ======================
 # APPLICATIONS
@@ -77,8 +78,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # CORRECTION : Centralisation du chemin des templates ici
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'Yaskawa_app_bckend' / 'templates'], # Chemin corrigé pour tes templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -103,7 +103,7 @@ DATABASES = {
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'HOST': os.getenv('DB_HOST', 'db'),
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
@@ -129,14 +129,24 @@ USE_I18N = True
 USE_TZ = True
 
 # ======================
-# STATIC FILES
+# STATIC FILES (CSS, JS, Images)
 # ======================
 
 STATIC_URL = '/static/'
-# CORRECTION : Ajout des chemins pour trouver ton CSS
-# Si le dossier sur ton disque est "Yaskawa_app_bckend" (Y majuscule)
+
+# INDISPENSABLE : Dossier où Docker rassemble les fichiers pour Jazzmin
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Dossier de tes fichiers statiques personnalisés
 STATICFILES_DIRS = [BASE_DIR / 'Yaskawa_app_bckend' / 'static']
-TEMPLATES[0]['DIRS'] = [BASE_DIR / 'Yaskawa_app_bckend' / 'templates']
+
+# ======================
+# MEDIA FILES (Uploads)
+# ======================
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # ======================
 # DEFAULT PK
 # ======================
@@ -147,6 +157,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # AUTHENTICATION URLS
 # ======================
 
-LOGIN_URL = '/'  # Si ta page de login est à la racine
+LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/admin/'
 LOGOUT_REDIRECT_URL = '/'

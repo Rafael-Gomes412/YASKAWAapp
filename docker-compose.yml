@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: yaskawa_db
+      POSTGRES_USER: raf_adm
+      POSTGRES_PASSWORD: Ggc4126.
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    restart: always
+    ports:
+      - "9000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      
+      - DB_NAME=yaskawa_db
+      - DB_USER=raf_adm
+      - DB_PASSWORD=Ggc4126.
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

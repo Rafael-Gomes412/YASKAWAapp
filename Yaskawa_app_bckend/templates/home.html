@@ -18,26 +18,34 @@
 
     <div class="category-grid">
         {% for cat in categories %}
-        <div class="category-card">
-            <img src="{% static 'image/' %}{{ cat.img }}" alt="{{ cat.name }}" onerror="this.style.display='none'">
-            
-            <div class="category-label">
-                {{ cat.name }}
+        <a href="{% url 'category_detail' cat.slug %}" class="category-link" style="text-decoration: none; color: inherit;">
+            <div class="category-card">
+                {% if cat.image_home %}
+                    <img src="{{ cat.image_home.url }}" alt="{{ cat.name }}">
+                {% else %}
+                    <img src="{% static 'image/default-category.png' %}" alt="Default">
+                {% endif %}
+                
+                <div class="category-label">
+                    {{ cat.name }}
+                </div>
             </div>
-        </div>
+        </a>
+        {% empty %}
+        <p style="text-align: center; width: 100%;">Aucune catégorie disponible. Ajoutez-en dans l'administration.</p>
         {% endfor %}
     </div>
 
 </div>
 
 <script>
+    // Le script de recherche reste fonctionnel avec les nouveaux liens
     document.getElementById('categorySearch').addEventListener('input', function(e) {
         let filter = e.target.value.toLowerCase();
-        let cards = document.querySelectorAll('.category-card');
+        let cards = document.querySelectorAll('.category-link');
         
         cards.forEach(card => {
             let name = card.querySelector('.category-label').textContent.toLowerCase();
-            // Si le nom contient la recherche, on affiche, sinon on cache
             if (name.includes(filter)) {
                 card.style.display = "block";
             } else {

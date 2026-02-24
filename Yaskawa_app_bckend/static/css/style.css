@@ -150,7 +150,7 @@ main.home-main {
 }
 
 /* ==========================================================================
-   6. GRID DES CATÉGORIES ET SEARCH BAR (Version Fine & Clean)
+   6. GRID DES CATÉGORIES // SEARCH BAR AND PRODUCT (Version Fine & Clean)
    ========================================================================== */
 .dashboard-container {
     width: 100%;
@@ -245,7 +245,92 @@ main.home-main {
     text-align: center;
     clip-path: polygon(0 25%, 100% 0, 100% 100%, 0 100%);
 }
+/* À AJOUTER POUR LES PRODUITS */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 produits par ligne */
+    gap: 15px;
+    padding: 15px;
+}
 
+.product-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    aspect-ratio: 2/1.5; /* Cartes carrées pour les produits */
+}
+.product-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+.product-info-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /* Dégradé du transparent vers le bleu Yaskawa pour ne pas masquer le haut du produit */
+    background: linear-gradient(to top, rgba(0, 87, 184, 0.95) 0%, rgba(0, 87, 184, 0.7) 70%, transparent 100%);
+    color: white;
+    padding: 30px 15px 15px 15px; /* Plus de padding en haut pour le dégradé */
+}
+
+.product-card:hover .product-info-overlay {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Style interne pour les textes dans l'overlay */
+.product-ref {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.tech-details {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    opacity: 0.9;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 8px;
+}
+/*Pagination*/
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-page {
+    padding: 10px 18px;
+    background: white;
+    border: 1px solid #0057B8;
+    color: #0057B8;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.btn-page:hover {
+    background: #0057B8;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 87, 184, 0.2);
+}
+
+.current-page {
+    color: #555;
+    font-size: 14px;
+}
 /* ==========================================================================
    7. FOOTER
    ========================================================================== */

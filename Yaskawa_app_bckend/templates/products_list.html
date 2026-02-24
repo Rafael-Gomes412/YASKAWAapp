@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <form method="GET" class="search-container">
+        <div class="search-box">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Rechercher une référence ou un code SAP..." class="search-input">
+            </div>
+    </form>
+
+    <div class="category-badge-container">
+        <div class="category-badge">
+            {{ category.name }}
+        </div>
+    </div>
+
+    <div class="product-grid" id="productGrid">
+        {% for prod in products %}
+        <div class="product-card">
+            {% if prod.image %}
+                <img src="{{ prod.image.url }}" alt="{{ prod.model_code }}">
+            {% else %}
+                <img src="{% static 'image/default-product.png' %}" alt="No Image">
+            {% endif %}
+
+            <div class="product-info-overlay">
+                <p class="product-ref">Réf : {{ prod.model_code }}</p>
+                <p class="product-ref">SAP : {{ prod.numero_SAP }}</p>
+                
+                {% if is_engineer %}
+                <div class="tech-details">
+                    {{ prod.caracteristique|default:"-" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <p style="grid-column: 1 / -1; text-align: center; color: #666; padding: 40px;">
+            Aucun produit trouvé pour "{{ search_query }}".
+        </p>
+        {% endfor %}
+    </div>
+
+    {% if products.has_other_pages %}
+    <div class="pagination-container" style="text-align: center; margin-top: 30px;">
+        <span class="step-links">
+            {% if products.has_previous %}
+                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="btn-page">&laquo; Début</a>
+                <a href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn-page">Précédent</a>
+            {% endif %}
+
+            <span class="current-page">
+                Page <strong>{{ products.number }}</strong> sur {{ products.paginator.num_pages }}
+            </span>
+
+            {% if products.has_next %}
+                <a href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn-page">Suivant</a>
+                <a href="?page={{ products.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn-page">Fin &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+    {% endif %}
+
+    <div class="action-footer" style="text-align: center; margin-top: 40px; margin-bottom: 40px;">
+        <button class="btn-submit" style="background-color: #1a42bc; width: auto; padding: 12px 60px; border-radius: 8px;">
+            Choisir ma solution
+        </button>
+    </div>
+</div>
+
+{% endblock %}
