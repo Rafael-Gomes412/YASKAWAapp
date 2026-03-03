@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body_class %}configurateur-main{% endblock %}
+{% block content %}
+
+<div class="config-header">
+  <h1>Technical Configurator</h1>
+</div>
+
+<div class="config-grid">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="cfg-sidebar">
+
+    <!-- Carte Source -->
+    <div class="cfg-card cfg-card--source">
+      <div class="cfg-source-label">Main product</div>
+      <div class="cfg-source-badge">{{ main_product.model_code }}</div>
+      <div class="cfg-source-type">{{ main_product.product_type }}</div>
+    </div>
+
+    <!-- Carte Ma Solution -->
+    <div class="cfg-card">
+      <div class="cfg-solution-label">My Solution</div>
+      <ul class="cfg-solution-list">
+        <li class="cfg-solution-item">
+          <span class="cfg-item-code">{{ main_product.model_code }}</span>
+          <span class="cfg-tag-principal">Principal</span>
+        </li>
+        {% for item in request.session.bom_list %}
+        <li class="cfg-solution-item">
+          <span class="cfg-item-code">{{ item }}</span>
+          <a href="{% url 'remove_from_solution' item main_product.model_code %}"
+             class="cfg-remove-btn" title="Retirer">×</a>
+        </li>
+        {% endfor %}
+      </ul>
+      <a href="{% url 'export_bom' %}" class="btn-excel">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+             stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        </svg>
+        Generate Excel file
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- ── CONTENU PRINCIPAL ── -->
+  <div class="cfg-content-area">
+
+    <div class="cfg-tabs">
+      <button class="cfg-tab-btn active" onclick="showTab('t1', this)">{{ titles.t1 }}</button>
+      <button class="cfg-tab-btn"        onclick="showTab('t2', this)">{{ titles.t2 }}</button>
+      <button class="cfg-tab-btn"        onclick="showTab('t3', this)">{{ titles.t3 }}</button>
+      <button class="cfg-tab-btn"        onclick="showTab('t4', this)">{{ titles.t4 }}</button>
+    </div>
+
+    <!-- Tab 1 -->
+    <div id="t1" class="cfg-pane active">
+      {% for c in tab1 %}
+      <div class="cfg-product-row">
+        <div>
+          <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
+          <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+        </div>
+        <a href="{% url 'add_to_solution' c.compatible_product.model_code main_product.model_code %}"
+           class="btn-add">+ ADD</a>
+      </div>
+      {% empty %}
+      <div class="cfg-empty-state">No compatible product found.</div>
+      {% endfor %}
+    </div>
+
+    <!-- Tab 2 -->
+    <div id="t2" class="cfg-pane">
+      {% for c in tab2 %}
+      <div class="cfg-product-row">
+        <div>
+          <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
+          <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+        </div>
+        <a href="{% url 'add_to_solution' c.compatible_product.model_code main_product.model_code %}"
+           class="btn-add">+ ADD</a>
+      </div>
+      {% empty %}
+      <div class="cfg-empty-state">No compatible product found.</div>
+      {% endfor %}
+    </div>
+
+    <!-- Tab 3 -->
+    <div id="t3" class="cfg-pane">
+      {% for c in tab3 %}
+      <div class="cfg-product-row">
+        <div>
+          <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
+          <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+        </div>
+        <a href="{% url 'add_to_solution' c.compatible_product.model_code main_product.model_code %}"
+           class="btn-add">+ ADD</a>
+      </div>
+      {% empty %}
+      <div class="cfg-empty-state">No compatible product found.</div>
+      {% endfor %}
+    </div>
+
+    <!-- Tab 4 -->
+    <div id="t4" class="cfg-pane">
+      {% for c in tab4 %}
+      <div class="cfg-product-row">
+        <div>
+          <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
+          <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+        </div>
+        <a href="{% url 'add_to_solution' c.compatible_product.model_code main_product.model_code %}"
+           class="btn-add">+ ADD</a>
+      </div>
+      {% empty %}
+      <div class="cfg-empty-state">No compatible product found</div>
+      {% endfor %}
+    </div>
+
+  </div><!-- /.cfg-content-area -->
+</div><!-- /.config-grid -->
+
+<!-- Réinitialiser 
+<div class="cfg-reset-area">
+  <a href="{% url 'my_solution' main_product.model_code %}" class="btn-reset">
+    Réinitialiser configuration
+  </a>
+</div>
+-->
+<script>
+  function showTab(id, btn) {
+    document.querySelectorAll('.cfg-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.cfg-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+
+{% endblock %}

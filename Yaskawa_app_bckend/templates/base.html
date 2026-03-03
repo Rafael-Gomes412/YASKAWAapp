@@ -2,35 +2,54 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>YASKAWA Sales&Support</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YASKAWA Sales & Support</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-<header class="main-header">
+
+  <header class="main-header">
     <div class="header-left">
-        <img src="{% static 'image/yaskawa-logo.png' %}" alt="Logo">
+      <a href="{% url 'home' %}">
+        <img src="{% static 'image/yaskawa-logo.png' %}" alt="Yaskawa Logo">
+      </a>
     </div>
     <nav class="header-right">
-        {% if user.is_authenticated %}
-            <a href="{% url 'home' %}">Dashboard</a>
-            <a href="#">About us</a>
-            <a href="#">Support</a>
-            <div class="user-profile-circle">{{ initials }}</div>
-            <a href="{% url 'logout' %}" style="color:red">Logout</a>
-        {% else %}
-            <a href="#">About us</a>
-            <a href="#">Support</a>
-        {% endif %}
+      <a href="{% url 'home' %}">Dashboard</a>
+      <a href="#">About us</a>
+      <a href="#">Support</a>
+      {% if user.is_authenticated %}
+        <div class="user-profile-circle">
+          {% if user.first_name and user.last_name %}
+            {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
+          {% else %}
+            {{ user.username|slice:":2"|upper }}
+          {% endif %}
+        </div>
+        <a href="{% url 'logout' %}" class="logout-link" title="Déconnexion">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}">Login</a>
+      {% endif %}
     </nav>
-</header>
+  </header>
 
-<main>
+  <!-- ↓ La seule ligne modifiée : ajout du block body_class -->
+  <main class="content-wrapper {% block body_class %}{% endblock %}">
     {% block content %}{% endblock %}
-</main>
+  </main>
 
-<footer class="main-footer" style="text-align:center; padding:20px; color:#666; border-top:1px solid #ddd;">
+  <footer class="main-footer">
     © 2026 YASKAWA – Sales & Support
-</footer>
+  </footer>
+
 </body>
 </html>

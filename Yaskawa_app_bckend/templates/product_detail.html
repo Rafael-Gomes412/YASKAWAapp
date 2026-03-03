@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" placeholder="Rechercher une référence ou un code SAP..." class="search-input">
+        </div>
+    </div>
+
+    <div class="category-badge-container">
+        <div class="category-badge">
+            {{ product.category.name }}
+        </div>
+    </div>
+
+    <div class="product-detail-flex">
+        
+        <div class="product-main-content">
+            <div class="product-image-block">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.model_code }}">
+                {% else %}
+                    <div class="image-placeholder">
+                        <img src="{% static 'image/default-product.png' %}" alt="No Image">
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="product-specs-block">
+                <div class="model-badge">{{ product.model_code }}</div>
+                
+                <div class="specs-grid">
+                    <div class="spec-item">
+                        <span class="spec-label">Numéro SAP</span>
+                        <span class="spec-value">{{ product.numero_SAP|default:"-" }}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Type de produit</span>
+                        <span class="spec-value">{{ product.product_type|default:"-" }}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Caractéristiques</span>
+                        <span class="spec-value">{{ product.features|linebreaksbr|default:"-" }}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Spécifications</span>
+                        <span class="spec-value">{{ product.specification|linebreaksbr|default:"-" }}</span>
+                    </div>
+                    {% if product.usable_with %}
+                    <div class="spec-item">
+                        <span class="spec-label">Utilisable avec</span>
+                        <span class="spec-value">{{ product.usable_with|linebreaksbr }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="product-side-actions">
+            
+            <!--<button class="btn-side btn-details">Details Produit</button>-->
+            <button class="btn-side btn-equivalence">Équivalence</button>
+            <button class="btn-side btn-error">Error Code</button>
+        </div>
+    </div>
+
+    <div class="action-footer">
+        <a href="{% url 'my_solution' product.model_code %}" class="btn-submit" style="text-decoration: none; display: inline-block; text-align: center;">
+            Choisir ma solution
+        </a>
+    </div>
+</div>
+{% endblock %}

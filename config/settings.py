@@ -25,7 +25,6 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 # Autorise toutes les connexions pour le développement Docker/VM
 ALLOWED_HOSTS = ['*']
 
-
 # ======================
 # APPLICATIONS
 # ======================
