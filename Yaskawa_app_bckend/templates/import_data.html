@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body_class %}configurateur-main{% endblock %}
+{% block content %}
+
+<div class="config-header">
+  <h1>Data base settings</h1>
+</div>
+
+<div class="import-wrapper">
+
+  <div class="import-layout">
+
+    <!-- ── SIDEBAR GAUCHE ── -->
+    <aside class="import-sidebar">
+
+      {% if error %}
+      <div class="import-alert import-alert--error">⚠ {{ error }}</div>
+      {% endif %}
+
+      <form method="POST" enctype="multipart/form-data" id="importForm">
+        {% csrf_token %}
+
+        <!-- Type d'import -->
+        <div class="import-field">
+          <label class="import-label">Import Type</label>
+          <select name="import_type" class="import-select" id="importTypeSelect">
+            <option value="products"         {% if import_type == 'products'         %}selected{% endif %}>Product</option>
+            <option value="compatibilities"  {% if import_type == 'compatibilities'  %}selected{% endif %}>Compatibility</option>
+            <option value="stock"            {% if import_type == 'stock'            %}selected{% endif %}>Stock</option>
+          </select>
+        </div>
+
+        <!-- Category (masquée pour compatibilités et stock) -->
+        <div class="import-field" id="categoryField">
+          <label class="import-label">Category</label>
+          <select name="category_id" class="import-select">
+            {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Colonne code (visible uniquement pour stock) -->
+        <div class="import-field" id="colCodeField" style="display:none;">
+          <label class="import-label">Column name (code)</label>
+          <input type="text" name="col_code" value="ModelCode" class="import-select"
+                 placeholder="ex: ModelCode">
+        </div>
+
+        <!-- Fichier -->
+        <div class="import-field">
+          <label class="import-label">New Data Base</label>
+          <div class="import-file-btn" id="newFileBtn" onclick="document.getElementById('newFile').click()">
+            <span id="newFileName">Chose a file...</span>
+          </div>
+          <input type="file" id="newFile" name="excel_file" accept=".xlsx" style="display:none"
+                 onchange="updateLabel('newFile','newFileName'); autoSubmit()">
+        </div>
+
+      </form>
+    </aside>
+
+    <!-- ── ZONE APERÇU ── -->
+    <div class="import-preview-area">
+      <p class="import-preview-title">Preview :</p>
+
+      <div class="import-preview-box" id="previewBox">
+
+        {% if step == 'preview' %}
+          {% if import_type == 'stock' %}
+          <!-- Aperçu Stock -->
+          <div class="import-result-grid">
+            <div class="import-result-item import-result-item--green">
+              <span class="result-number">{{ stock_in }}</span>
+              <span class="result-label">→ En stock</span>
+            </div>
+            <div class="import-result-item import-result-item--red">
+              <span class="result-number">{{ stock_out }}</span>
+              <span class="result-label">→ Hors stock</span>
+            </div>
+            <div class="import-result-item import-result-item--blue">
+              <span class="result-number">{{ stock_unknown }}</span>
+              <span class="result-label">Introuvables</span>
+            </div>
+          </div>
+          <p class="import-preview-count">{{ total_rows }} ligne(s) détectée(s). Confirmez pour appliquer.</p>
+
+          {% else %}
+          <!-- Aperçu tableau produits / compatibilités -->
+          <div class="import-table-wrap">
+            <table class="import-table">
+              <thead>
+                <tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr>
+              </thead>
+              <tbody>
+                {% for row in preview %}
+                <tr>{% for cell in row %}<td>{{ cell|default:"-" }}</td>{% endfor %}</tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="import-preview-count">{{ total_rows }} ligne(s) détectée(s) au total.</p>
+          {% endif %}
+
+        {% elif step == 'result' %}
+          {% if import_type == 'stock' %}
+          <!-- Résultat Stock -->
+          <div class="import-result-grid">
+            <div class="import-result-item import-result-item--green">
+              <span class="result-number">{{ stock_in }}</span>
+              <span class="result-label">Passés en stock</span>
+            </div>
+            <div class="import-result-item import-result-item--red">
+              <span class="result-number">{{ stock_out }}</span>
+              <span class="result-label">Passés hors stock</span>
+            </div>
+            <div class="import-result-item import-result-item--blue">
+              <span class="result-number">{{ stock_unknown }}</span>
+              <span class="result-label">Introuvables</span>
+            </div>
+          </div>
+          {% else %}
+          <!-- Résultat produits / compatibilités -->
+          <div class="import-result-grid">
+            <div class="import-result-item import-result-item--green">
+              <span class="result-number">{{ added }}</span>
+              <span class="result-label">Added</span>
+            </div>
+            <div class="import-result-item import-result-item--blue">
+              <span class="result-number">{{ updated }}</span>
+              <span class="result-label">Updated</span>
+            </div>
+            <div class="import-result-item import-result-item--red">
+              <span class="result-number">{{ errors|length }}</span>
+              <span class="result-label">Error(s)</span>
+            </div>
+          </div>
+          {% endif %}
+
+        {% else %}
+        <!-- État vide par défaut -->
+        <div class="import-empty">
+          <svg width="40" height="40" fill="none" viewBox="0 0 24 24"
+               stroke="#c0d8f5" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M9 17v-2a4 4 0 014-4h0a4 4 0 014 4v2M3 21h18M12 3v4m0 0l-2-2m2 2l2-2"/>
+          </svg>
+          <p>Chose your file <br>to see the preview</p>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div><!-- /.import-layout -->
+
+  <!-- ── BOUTON IMPORT ── -->
+  <div class="import-footer">
+    {% if step == 'preview' %}
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="import_type"  value="{{ import_type }}">
+        <input type="hidden" name="col_code"      value="{{ col_code }}">
+        <a href="{% url 'import_data' %}" class="btn-import-cancel">Cancel</a>
+        <button type="submit" name="confirm" class="btn-import-main">Confirm the import</button>
+      </form>
+    {% elif step == 'result' %}
+      <a href="{% url 'home' %}"        class="btn-import-cancel">← Dashboard</a>
+      <a href="{% url 'import_data' %}" class="btn-import-main">New import</a>
+    {% else %}
+      <button type="submit" form="importForm" class="btn-import-main">Import</button>
+    {% endif %}
+  </div>
+
+</div><!-- /.import-wrapper -->
+
+<script>
+  const importTypeSelect = document.getElementById('importTypeSelect');
+  const categoryField    = document.getElementById('categoryField');
+  const colCodeField     = document.getElementById('colCodeField');
+
+  function updateVisibility() {
+    const val = importTypeSelect.value;
+    // Category : visible seulement pour products
+    categoryField.style.display = (val === 'products') ? 'block' : 'none';
+    // Col code : visible seulement pour stock
+    colCodeField.style.display  = (val === 'stock')    ? 'block' : 'none';
+  }
+
+  importTypeSelect.addEventListener('change', updateVisibility);
+  updateVisibility(); // Init au chargement
+
+  function updateLabel(inputId, labelId) {
+    const input = document.getElementById(inputId);
+    const label = document.getElementById(labelId);
+    if (input.files.length > 0) {
+      label.textContent = '✓ ' + input.files[0].name;
+      document.getElementById('newFileBtn').classList.add('import-file-btn--filled');
+    }
+  }
+
+  function autoSubmit() {
+    const btn  = document.createElement('button');
+    btn.name   = 'preview';
+    btn.type   = 'submit';
+    btn.style.display = 'none';
+    document.getElementById('importForm').appendChild(btn);
+    btn.click();
+  }
+</script>
+
+{% endblock %}

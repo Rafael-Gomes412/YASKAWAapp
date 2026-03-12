@@ -3,75 +3,337 @@
 
 {% block content %}
 <div class="dashboard-container">
-    
-    <form method="GET" class="search-container">
+
+    {# ── Barre de recherche ── #}
+    <form method="GET" id="filterForm" class="search-container" role="search">
         <div class="search-box">
-            <input type="text" 
-                   name="search" 
-                   value="{{ search_query }}" 
-                   placeholder="Rechercher une référence ou un code SAP..." 
-                   class="search-input">
-            </div>
+            <span class="search-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="#0057B8" stroke-width="2.5"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </span>
+            <input
+                type="search"
+                name="search"
+                id="search"
+                value="{{ request.GET.search|default:'' }}"
+                placeholder="Search reference / SAP..."
+                class="search-input"
+                aria-label="Search products"
+                autocomplete="off"
+            >
+            {% for key, value in request.GET.items %}
+                {% if key != "search" and key != "page" %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endif %}
+            {% endfor %}
+        </div>
     </form>
 
-    <div class="category-badge-container">
-        <div class="category-badge">
-            {{ category.name }}
-        </div>
-    </div>
+    <div class="product-layout">
 
-    <div class="product-grid" id="productGrid">
-        {% for prod in products %}
-        {# Lien dynamique vers la fiche détail utilisant le model_code #}
-        <a href="{% url 'product_detail' prod.model_code %}" class="product-card-link">
-            <div class="product-card">
-                {% if prod.image %}
-                    <img src="{{ prod.image.url }}" alt="{{ prod.model_code }}">
-                {% else %}
-                    <img src="{% static 'image/default-product.png' %}" alt="No Image">
+        {# ── Sidebar filtres ── #}
+        <aside class="filter-sidebar" aria-label="Product filters">
+            <form method="GET" id="sidebarForm">
+
+                {% if request.GET.search %}
+                    <input type="hidden" name="search" value="{{ request.GET.search }}">
                 {% endif %}
 
-                <div class="product-info-overlay">
-                    <p class="product-ref">Réf : {{ prod.model_code }}</p>
-                    <p class="product-ref">SAP : {{ prod.numero_SAP }}</p>
-                    
-                    {# Affichage des caractéristiques si l'utilisateur est ingénieur #}
-                    {% if is_engineer %}
-                    <div class="tech-details">
-                        {{ prod.features|default:"-" }}
+
+                {# Common Information #}
+                <h3 class="filter-title">Common Information</h3>
+                    {% if power_values %}
+                    <label class="filter-label">Power (kW)</label>
+                    <div class="filter-row">
+                        <select name="power_min" class="side-input" onchange="this.form.submit()" aria-label="Minimum power">
+                            <option value="">Min</option>
+                            {% for p in power_values %}
+                                <option value="{{ p }}" {% if request.GET.power_min == p %}selected{% endif %}>{{ p }} kW</option>
+                            {% endfor %}
+                        </select>
+                        <select name="power_max" class="side-input" onchange="this.form.submit()" aria-label="Maximum power">
+                            <option value="">Max</option>
+                            {% for p in power_values %}
+                                <option value="{{ p }}" {% if request.GET.power_max == p %}selected{% endif %}>{{ p }} kW</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="filter-group">
+                        {% if voltages %}
+                            <label class="filter-label" for="filter-voltage">Voltage</label>
+                            <select id="filter-voltage" name="voltage" class="side-input" onchange="this.form.submit()">
+                                <option value="">All</option>
+                                {% for v in voltages %}
+                                    <option value="{{ v }}" {% if request.GET.voltage == v %}selected{% endif %}>{{ v }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                    </div>
+
+                {# Servopack #}
+                <div class="filter-group">
+                    <h3 class="filter-title">Servopack</h3>
+
+                    {% if sgd_protocols %}
+                        <label class="filter-label" for="filter-protocol">Protocol</label>
+                        <select id="filter-protocol" name="protocol" class="side-input" onchange="this.form.submit()">
+                            <option value="">All</option>
+                            {% for proto in sgd_protocols %}
+                                <option value="{{ proto }}" {% if request.GET.protocol == proto %}selected{% endif %}>{{ proto }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+
+                    {% if sgd_series %}
+                        <label class="filter-label" for="filter-sgd-series">Series</label>
+                        <select id="filter-sgd-series" name="series" class="side-input" onchange="this.form.submit()">
+                            <option value="">All</option>
+                            {% for s in sgd_series %}
+                                <option value="{{ s }}" {% if request.GET.series == s %}selected{% endif %}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                </div>
+
+                {# Motor #}
+                <div class="filter-group">
+                    <h3 class="filter-title">Motor</h3>
+
+                    {% if sgm_series %}
+                        <label class="filter-label" for="filter-sgm-series">Series</label>
+                        <select id="filter-sgm-series" name="sgm_series" class="side-input" onchange="this.form.submit()">
+                            <option value="">All</option>
+                            {% for s in sgm_series %}
+                                <option value="{{ s }}" {% if request.GET.sgm_series == s %}selected{% endif %}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+
+                    {% if sgm_encoders %}
+                        <label class="filter-label" for="filter-encoder">Encoder</label>
+                        <select id="filter-encoder" name="encoder_type" class="side-input" onchange="this.form.submit()">
+                            <option value="">All</option>
+                            {% for enc in sgm_encoders %}
+                                <option value="{{ enc }}" {% if request.GET.encoder_type == enc %}selected{% endif %}>{{ enc }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+
+                    <label class="filter-label" for="filter-brake">Brake</label>
+                    <select id="filter-brake" name="brake" class="side-input" onchange="this.form.submit()">
+                        <option value="">All</option>
+                        <option value="true"  {% if request.GET.brake == 'true'  %}selected{% endif %}>With brake</option>
+                        <option value="false" {% if request.GET.brake == 'false' %}selected{% endif %}>Without brake</option>
+                    </select>
+                </div>
+                {# ── Filtre In Stock ── #}
+                <div class="filter-group">
+                    <label class="filter-stock-label">
+                        <input type="checkbox"
+                               name="in_stock"
+                               value="true"
+                               {% if request.GET.in_stock == 'true' %}checked{% endif %}
+                               onchange="this.form.submit()"
+                               class="filter-stock-checkbox">
+                        <span class="filter-stock-text">In stock only</span>
+                       <!-- <span class="stock-badge stock-badge--in" style="margin-top:0; margin-left:auto;">●</span>-->
+                    </label>
+                </div>
+
+                <div class="filter-actions">
+                    <a href="?" class="btn-filter-reset">Reset</a>
+                </div>
+
+            </form>
+
+            {# ── Résumé sélection en cours ── #}
+            {% with sp=request.session.selected_servopack mt=request.session.selected_motor %}
+                {% if sp or mt %}
+                <div class="selection-summary">
+                    <div class="selection-summary__title">Current selection</div>
+
+                    {% if sp %}
+                    <div class="selection-summary__item selection-summary__item--sgd">
+                        <div class="selection-summary__info">
+                            <span class="selection-summary__label">Servopack</span>
+                            <span class="selection-summary__code">{{ sp }}</span>
+                        </div>
+                        <a href="{% url 'select_servopack' 'none' %}" class="selection-summary__remove" title="Deselect">×</a>
+                    </div>
+                    {% endif %}
+
+                    {% if mt %}
+                    <div class="selection-summary__item selection-summary__item--sgm">
+                        <div class="selection-summary__info">
+                            <span class="selection-summary__label">Motor</span>
+                            <span class="selection-summary__code">{{ mt }}</span>
+                        </div>
+                        <a href="{% url 'select_motor' 'none' %}" class="selection-summary__remove" title="Deselect">×</a>
                     </div>
                     {% endif %}
                 </div>
+                {% endif %}
+
+                {# Bouton Build my solution #}
+                {% if sp and mt %}
+                    <a href="{% url 'resume' sp_code=sp mt_code=mt %}" class="btn-build">
+                        Build my solution
+                    </a>
+                {% elif sp %}
+                    <a href="{% url 'pick_pair' model_code=sp %}" class="btn-build">
+                        Build my solution
+                        <span style="display:block;font-size:0.7rem;font-weight:400;opacity:0.85;">Choose a motor →</span>
+                    </a>
+                {% elif mt %}
+                    <a href="{% url 'pick_pair' model_code=mt %}" class="btn-build">
+                        Build my solution
+                        <span style="display:block;font-size:0.7rem;font-weight:400;opacity:0.85;">Choose a servopack →</span>
+                    </a>
+                {% else %}
+                    <span class="btn-build" style="opacity:0.45;cursor:not-allowed;" title="Select a product first">
+                        Build my solution
+                    </span>
+                {% endif %}
+            {% endwith %}
+
+        </aside>
+
+        {# ── Zone résultats ── #}
+        <section class="results-area" aria-label="Product results">
+
+            <div class="category-header">
+                <span class="category-name">{{ category.name }}</span>
+                <hr class="category-line">
             </div>
-        </a>
-        {% empty %}
-        <p style="grid-column: 1 / -1; text-align: center; color: #666; padding: 40px;">
-            Aucun produit trouvé pour "{{ search_query }}".
-        </p>
-        {% endfor %}
-    </div>
 
-    {# Gestion de la pagination avec conservation du terme de recherche #}
-    {% if products.has_other_pages %}
-    <div class="pagination-container" style="text-align: center; margin-top: 30px;">
-        <span class="step-links">
-            {% if products.has_previous %}
-                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="btn-page">&laquo; Début</a>
-                <a href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn-page">Précédent</a>
+            <div class="dual-grid">
+
+                {# ── Colonne Servopack ── #}
+                <div class="grid-column">
+                    <h3 class="grid-title">
+                        <span class="grid-badge sgd">Servopack</span>
+                        <span class="grid-count">{{ sgd_products.paginator.count }} result{{ sgd_products.paginator.count|pluralize }}</span>
+                    </h3>
+                    <div class="product-grid">
+                        {% for prod in sgd_products %}
+                        <div class="product-card-wrapper {% if request.session.selected_servopack == prod.model_code %}product-card-wrapper--selected{% endif %}">
+
+                            <a href="{% url 'product_detail' prod.model_code %}" class="product-card-link"
+                               aria-label="Servopack {{ prod.model_code }}">
+                                <div class="product-card">
+                                    {% if request.session.selected_servopack == prod.model_code %}
+                                        <div class="product-card__selected-badge">✓ Selected</div>
+                                    {% endif %}
+                                    {% if prod.in_stock %}
+                                        <span class="stock-badge stock-badge--in">In stock</span>
+                                    {% else %}
+                                        <span class="stock-badge stock-badge--out">Out of stock</span>
+                                    {% endif %}
+                                    <img
+                                        src="{% if prod.display_image %}{{ prod.display_image }}{% else %}{% static 'image/default-product.png' %}{% endif %}"
+                                        alt="{{ prod.model_code }}"
+                                        loading="lazy"
+                                    >
+                                    <div class="product-info-overlay">
+                                        <p class="product-ref">{{ prod.model_code }}</p>
+                                        {% if prod.spec %}
+                                            <p class="product-spec">{{ prod.spec.voltage }} — {{ prod.spec.power_kw }} kW</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+
+                            {% if request.session.selected_servopack == prod.model_code %}
+                                <a href="{% url 'select_servopack' 'none' %}"
+                                   class="btn-select btn-select--active btn-select--deselect"
+                                   aria-pressed="true">× Deselect</a>
+                            {% else %}
+                                <a href="{% url 'select_servopack' prod.model_code %}"
+                                   class="btn-select"
+                                   aria-pressed="false">Select</a>
+                            {% endif %}
+
+                        </div>
+                        {% empty %}
+                            <div class="empty-results" role="status">No Servopack found</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# ── Colonne Motor ── #}
+                <div class="grid-column">
+                    <h3 class="grid-title">
+                        <span class="grid-badge sgm">Motor</span>
+                        <span class="grid-count">{{ sgm_products.paginator.count }} result{{ sgm_products.paginator.count|pluralize }}</span>
+                    </h3>
+                    <div class="product-grid">
+                        {% for prod in sgm_products %}
+                        <div class="product-card-wrapper {% if request.session.selected_motor == prod.model_code %}product-card-wrapper--selected{% endif %}">
+
+                            <a href="{% url 'product_detail' prod.model_code %}" class="product-card-link"
+                               aria-label="Motor {{ prod.model_code }}">
+                                <div class="product-card">
+                                    {% if request.session.selected_motor == prod.model_code %}
+                                        <div class="product-card__selected-badge">✓ Selected</div>
+                                    {% endif %}
+                                    {% if prod.in_stock %}
+                                        <span class="stock-badge stock-badge--in">In stock</span>
+                                    {% else %}
+                                        <span class="stock-badge stock-badge--out">Out of stock</span>
+                                    {% endif %}
+                                    <img
+                                        src="{% if prod.display_image %}{{ prod.display_image }}{% else %}{% static 'image/default-product.png' %}{% endif %}"
+                                        alt="{{ prod.model_code }}"
+                                        loading="lazy"
+                                    >
+                                    <div class="product-info-overlay">
+                                        <p class="product-ref">{{ prod.model_code }}</p>
+                                        {% if prod.spec %}
+                                            <p class="product-spec">{{ prod.spec.voltage }} — {{ prod.spec.power_kw }} kW</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+
+                            {% if request.session.selected_motor == prod.model_code %}
+                                <a href="{% url 'select_motor' 'none' %}"
+                                   class="btn-select btn-select--active btn-select--deselect"
+                                   aria-pressed="true">× Deselect</a>
+                            {% else %}
+                                <a href="{% url 'select_motor' prod.model_code %}"
+                                   class="btn-select"
+                                   aria-pressed="false">Select</a>
+                            {% endif %}
+
+                        </div>
+                        {% empty %}
+                            <div class="empty-results" role="status">No Motor found</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>{# /.dual-grid #}
+
+            {# ── Pagination ── #}
+            {% if sgd_products.has_other_pages or sgm_products.has_other_pages %}
+                <div class="pagination-container" aria-label="Pagination">
+                    {% if sgd_products.has_previous %}
+                        <a class="btn-page" href="?{{ request.GET.urlencode }}&sgd_page={{ sgd_products.previous_page_number }}">‹ Prev</a>
+                    {% endif %}
+                    <span class="current-page">Page {{ sgd_products.number }} / {{ sgd_products.paginator.num_pages }}</span>
+                    {% if sgd_products.has_next %}
+                        <a class="btn-page" href="?{{ request.GET.urlencode }}&sgd_page={{ sgd_products.next_page_number }}">Next ›</a>
+                    {% endif %}
+                </div>
             {% endif %}
 
-            <span class="current-page">
-                Page <strong>{{ products.number }}</strong> sur {{ products.paginator.num_pages }}
-            </span>
-
-            {% if products.has_next %}
-                <a href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn-page">Suivant</a>
-                <a href="?page={{ products.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn-page">Fin &raquo;</a>
-            {% endif %}
-        </span>
+        </section>
     </div>
-    {% endif %}
-
-
 </div>
 {% endblock %}

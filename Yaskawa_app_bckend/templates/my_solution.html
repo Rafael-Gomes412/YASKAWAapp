@@ -12,29 +12,72 @@
   <!-- ── SIDEBAR ── -->
   <aside class="cfg-sidebar">
 
-    <!-- Carte Source -->
+    <!-- Produits principaux fixes -->
     <div class="cfg-card cfg-card--source">
-      <div class="cfg-source-label">Main product</div>
-      <div class="cfg-source-badge">{{ main_product.model_code }}</div>
-      <div class="cfg-source-type">{{ main_product.product_type }}</div>
+      <div class="cfg-source-label">Main Products</div>
+
+      <!-- Servopack -->
+      <div class="cfg-main-product cfg-main-product--sgd">
+        <span class="cfg-main-badge">SGD</span>
+        <div class="cfg-main-info">
+          <div class="cfg-source-badge">{{ main_product.model_code }}</div>
+          <div class="cfg-source-type">{{ main_product.product_type }}</div>
+          {% if main_product.in_stock %}
+            <span class="stock-badge stock-badge--in">In stock</span>
+          {% else %}
+            <span class="stock-badge stock-badge--out">Out of stock</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if motor_product %}
+      <!-- Moteur -->
+      <div class="cfg-main-product cfg-main-product--sgm" style="margin-top:10px;">
+        <span class="cfg-main-badge cfg-main-badge--sgm">SGM</span>
+        <div class="cfg-main-info">
+          <div class="cfg-source-badge">{{ motor_product.model_code }}</div>
+          <div class="cfg-source-type">{{ motor_product.product_type }}</div>
+          {% if motor_product.in_stock %}
+            <span class="stock-badge stock-badge--in">In stock</span>
+          {% else %}
+            <span class="stock-badge stock-badge--out">Out of stock</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <!-- Carte Ma Solution -->
     <div class="cfg-card">
       <div class="cfg-solution-label">My Solution</div>
       <ul class="cfg-solution-list">
+
         <li class="cfg-solution-item">
           <span class="cfg-item-code">{{ main_product.model_code }}</span>
-          <span class="cfg-tag-principal">Principal</span>
+          <span class="cfg-tag-principal">Servopack</span>
         </li>
-        {% for item in request.session.bom_list %}
-        <li class="cfg-solution-item">
-          <span class="cfg-item-code">{{ item }}</span>
-          <a href="{% url 'remove_from_solution' item main_product.model_code %}"
-             class="cfg-remove-btn" title="Retirer">×</a>
+
+        {% if motor_product %}
+        <li class="cfg-solution-item cfg-solution-item--motor">
+          <span class="cfg-item-code">{{ motor_product.model_code }}</span>
+          <span class="cfg-tag-principal cfg-tag-motor">Motor</span>
         </li>
+        {% endif %}
+
+        {% for item in bom_list %}
+          {% if item != main_product.model_code %}
+            {% if not motor_product or item != motor_product.model_code %}
+            <li class="cfg-solution-item">
+              <span class="cfg-item-code">{{ item }}</span>
+              <a href="{% url 'remove_from_solution' item main_product.model_code %}"
+                 class="cfg-remove-btn" title="Retirer">×</a>
+            </li>
+            {% endif %}
+          {% endif %}
         {% endfor %}
+
       </ul>
+
       <a href="{% url 'export_bom' %}" class="btn-excel">
         <svg width="16" height="16" fill="none" viewBox="0 0 24 24"
              stroke="currentColor" stroke-width="2">
@@ -51,19 +94,31 @@
   <div class="cfg-content-area">
 
     <div class="cfg-tabs">
+      {% if titles.t1 %}
       <button class="cfg-tab-btn active" onclick="showTab('t1', this)">{{ titles.t1 }}</button>
-      <button class="cfg-tab-btn"        onclick="showTab('t2', this)">{{ titles.t2 }}</button>
-      <button class="cfg-tab-btn"        onclick="showTab('t3', this)">{{ titles.t3 }}</button>
-      <button class="cfg-tab-btn"        onclick="showTab('t4', this)">{{ titles.t4 }}</button>
+      {% endif %}
+      {% if titles.t2 %}
+      <button class="cfg-tab-btn" onclick="showTab('t2', this)">{{ titles.t2 }}</button>
+      {% endif %}
+      {% if titles.t3 %}
+      <button class="cfg-tab-btn" onclick="showTab('t3', this)">{{ titles.t3 }}</button>
+      {% endif %}
     </div>
 
-    <!-- Tab 1 -->
+    <!-- Tab 1 — Encoder Cable -->
     <div id="t1" class="cfg-pane active">
       {% for c in tab1 %}
       <div class="cfg-product-row">
-        <div>
-          <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
-          <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div>
+            <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
+            <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+          </div>
+          {% if c.compatible_product.in_stock %}
+            <span class="stock-badge stock-badge--in">In stock</span>
+          {% else %}
+            <span class="stock-badge stock-badge--out">Out of stock</span>
+          {% endif %}
         </div>
         <a href="{% url 'add_to_solution' c.compatible_product.model_code main_product.model_code %}"
            class="btn-add">+ ADD</a>
@@ -73,13 +128,20 @@
       {% endfor %}
     </div>
 
-    <!-- Tab 2 -->
+    <!-- Tab 2 — Power Cable -->
     <div id="t2" class="cfg-pane">
       {% for c in tab2 %}
       <div class="cfg-product-row">
-        <div>
-          <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
-          <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div>
+            <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
+            <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+          </div>
+          {% if c.compatible_product.in_stock %}
+            <span class="stock-badge stock-badge--in">In stock</span>
+          {% else %}
+            <span class="stock-badge stock-badge--out">Out of stock</span>
+          {% endif %}
         </div>
         <a href="{% url 'add_to_solution' c.compatible_product.model_code main_product.model_code %}"
            class="btn-add">+ ADD</a>
@@ -89,13 +151,20 @@
       {% endfor %}
     </div>
 
-    <!-- Tab 3 -->
+    <!-- Tab 3 — Accessories -->
     <div id="t3" class="cfg-pane">
       {% for c in tab3 %}
       <div class="cfg-product-row">
-        <div>
-          <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
-          <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div>
+            <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
+            <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
+          </div>
+          {% if c.compatible_product.in_stock %}
+            <span class="stock-badge stock-badge--in">In stock</span>
+          {% else %}
+            <span class="stock-badge stock-badge--out">Out of stock</span>
+          {% endif %}
         </div>
         <a href="{% url 'add_to_solution' c.compatible_product.model_code main_product.model_code %}"
            class="btn-add">+ ADD</a>
@@ -105,32 +174,9 @@
       {% endfor %}
     </div>
 
-    <!-- Tab 4 -->
-    <div id="t4" class="cfg-pane">
-      {% for c in tab4 %}
-      <div class="cfg-product-row">
-        <div>
-          <div class="cfg-product-code">{{ c.compatible_product.model_code }}</div>
-          <div class="cfg-product-sub">{{ c.compatible_product.product_type }}</div>
-        </div>
-        <a href="{% url 'add_to_solution' c.compatible_product.model_code main_product.model_code %}"
-           class="btn-add">+ ADD</a>
-      </div>
-      {% empty %}
-      <div class="cfg-empty-state">No compatible product found</div>
-      {% endfor %}
-    </div>
-
-  </div><!-- /.cfg-content-area -->
-</div><!-- /.config-grid -->
-
-<!-- Réinitialiser 
-<div class="cfg-reset-area">
-  <a href="{% url 'my_solution' main_product.model_code %}" class="btn-reset">
-    Réinitialiser configuration
-  </a>
+  </div>
 </div>
--->
+
 <script>
   function showTab(id, btn) {
     document.querySelectorAll('.cfg-pane').forEach(p => p.classList.remove('active'));

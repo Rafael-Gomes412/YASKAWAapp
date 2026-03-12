@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="dashboard-container">
+
+    {# ── En-tête ── #}
+    <div class="category-header" style="margin-top: 24px;">
+        <span class="category-name">
+            Choose a compatible {{ pair_label }} for
+            <strong>{{ known_product.model_code }}</strong>
+        </span>
+        <hr class="category-line">
+    </div>
+
+    {# ── Carte produit déjà choisi ── #}
+    <div style="display:flex; align-items:center; gap:16px; margin: 16px 0 28px;
+                padding: 16px 20px; background:#e8f1fb; border-radius:12px;
+                border:1px solid #c5d8f5; max-width:600px;">
+        <div style="width:72px; height:54px; flex-shrink:0; border-radius:8px;
+                    background:#fff; display:flex; align-items:center; justify-content:center;
+                    box-shadow:0 1px 4px rgba(0,87,184,0.1);">
+            {% if known_product.image %}
+            <img src="{% if known_product.display_image %}{{ known_product.display_image }}{% else %}{% static 'image/default-product.png' %}{% endif %}"
+            alt="{{ known_product.model_code }}"
+            style="max-width:64px; max-height:46px; object-fit:contain;">
+            {% else %}
+            <img src="{% if known_product.display_image %}{{ known_product.display_image }}{% else %}{% static 'image/default-product.png' %}{% endif %}"
+            alt="{{ known_product.model_code }}"
+            style="max-width:64px; max-height:46px; object-fit:contain;">
+            {% endif %}
+        </div>
+        <div>
+            <div style="font-size:0.72rem; font-weight:700; color:#6b7a99;
+                        text-transform:uppercase; letter-spacing:0.7px;">
+                Selected product
+            </div>
+            <div style="font-size:1rem; font-weight:700; color:#0057B8;">
+                {{ known_product.model_code }}
+            </div>
+            <div style="font-size:0.8rem; color:#555; margin-top:2px;">
+                {{ known_product.product_type }}
+                {% if known_product.spec %}
+                    — {{ known_product.spec.voltage }}
+                    {% if known_product.spec.power_kw %} / {{ known_product.spec.power_kw }} kW{% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# ── Liste des candidats (style rectangle horizontal) ── #}
+    {% if candidates %}
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:32px; max-width:800px;">
+            {% for prod in candidates %}
+            <div style="display:flex; align-items:center; gap:16px; padding:16px 20px;
+                        background:#fff; border-radius:12px; border:1px solid #e8e8e8;
+                        box-shadow:0 2px 8px rgba(0,0,0,0.05);
+                        transition:box-shadow 0.2s, border-color 0.2s;">
+
+                {# Miniature #}
+                <div style="width:80px; height:60px; flex-shrink:0; border-radius:8px;
+                            background:#f4f7fc; display:flex; align-items:center; justify-content:center;">
+                    <img src="{% if prod.display_image %}{{ prod.display_image }}{% else %}{% static 'image/default-product.png' %}{% endif %}"
+
+                         style="max-width:72px; max-height:52px; object-fit:contain;"
+                         loading="lazy">
+                </div>
+
+                {# Infos produit #}
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:0.95rem; font-weight:700; color:#0057B8;
+                               
+                                overflow:hidden; text-overflow:ellipsis;">
+                        {{ prod.model_code }}
+                    </div>
+                    <div style="font-size:0.78rem; color:#6b7a99; margin-top:2px;">
+                        SAP : {{ prod.numero_SAP }}
+                    </div>
+                    {% if prod.spec %}
+                    <div style="font-size:0.8rem; color:#555; margin-top:3px;">
+                        {{ prod.spec.voltage }}{% if prod.spec.power_kw %} — {{ prod.spec.power_kw }} kW{% endif %}
+                        {% if prod.spec.series %} · {{ prod.spec.series }}{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                {# Bouton Select #}
+                {% if sp_code %}
+                    <a href="{% url 'resume' sp_code=sp_code mt_code=prod.model_code %}"
+                       style="text-decoration:none; display:inline-flex; align-items:center;
+                              justify-content:center; height:38px; padding:0 20px;
+                              background:#0057B8; border-radius:8px; color:#fff;
+                              font-weight:700; font-size:0.85rem; white-space:nowrap;
+                              flex-shrink:0; transition:background 0.2s;">
+                        Select 
+                    </a>
+                {% else %}
+                    <a href="{% url 'resume' sp_code=prod.model_code mt_code=known_product.model_code %}"
+                       style="text-decoration:none; display:inline-flex; align-items:center;
+                              justify-content:center; height:38px; padding:0 20px;
+                              background:#0057B8; border-radius:8px; color:#fff;
+                              font-weight:700; font-size:0.85rem; white-space:nowrap;
+                              flex-shrink:0; transition:background 0.2s;">
+                        Select →
+                    </a>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+        </div>
+
+        {# ── Pagination ── #}
+        {% if candidates.has_other_pages %}
+            <div class="pagination-container">
+                {% if candidates.has_previous %}
+                    <a class="btn-page" href="?page={{ candidates.previous_page_number }}">‹ Prev</a>
+                {% endif %}
+                <span class="current-page">
+                    Page {{ candidates.number }} / {{ candidates.paginator.num_pages }}
+                </span>
+                {% if candidates.has_next %}
+                    <a class="btn-page" href="?page={{ candidates.next_page_number }}">Next ›</a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="empty-results">
+            No compatible {{ pair_label }} found for {{ known_product.model_code }}.
+        </div>
+    {% endif %}
+
+    {# ── Bouton retour ── #}
+    <div style="display:flex; justify-content:center; padding: 32px 0 48px;">
+        <a href="javascript:history.back()"
+           style="text-decoration:none; display:inline-flex; align-items:center;
+                  justify-content:center; height:46px; padding:0 28px;
+                  border:1.5px solid #dde4ee; border-radius:10px; color:#6b7a99;
+                  font-weight:600; font-size:0.9rem; white-space:nowrap;
+                  transition:border-color 0.2s, color 0.2s;">
+            ← Back
+        </a>
+    </div>
+</div>
+{% endblock %}
